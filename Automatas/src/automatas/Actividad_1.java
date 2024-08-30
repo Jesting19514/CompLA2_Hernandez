@@ -4,6 +4,7 @@
  */
 package automatas;
 
+import automatas.vehiculos.*;
 import java.math.BigInteger;
 
 /**
@@ -18,5 +19,7 @@ public class Actividad_1 {
         BigInteger numeroGrande = new BigInteger("12345678910111213141516");
         String cadena = "Edgar Essaul";
         System.out.println(cadena+(" ")+numeroEntero+(" ")+numeroDecimal+(" ")+numeroGrande);
+        Carro bocho= new Carro("morado");
+        Carro tesla = new Carro(5);
     } 
 }

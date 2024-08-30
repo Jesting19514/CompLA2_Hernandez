@@ -2,17 +2,22 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package automatas;
+package automatas.vehiculos;
 
 /**
  *
- * @author zzsglzz
+ * @author team1
  */
+
 public class Carro {
-    //Atributos
+
+//Atributos
     String color="Verde";
     byte kilometraje;
     double rendimiento;
+    int km;
+    public Carro(int km){this.km = km;}
+    public Carro(String color){}
     //Metodos
     //Modificador {private-public-protected-default} + Tipo{static-void} + (argumentos)
     public void cambiarColor(String nuevoColor){
