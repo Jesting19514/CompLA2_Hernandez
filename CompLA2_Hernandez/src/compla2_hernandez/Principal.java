@@ -9,12 +9,11 @@ package compla2_hernandez;
  * @author team1
  */
 public class Principal {
-
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
+        Archivos archivo = new Archivos();
+        archivo.openArchivo("C:\\Users\\team1\\Desktop\\prueba.txt"); 
     }
-    
 }
