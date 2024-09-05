@@ -4,6 +4,9 @@
  */
 package compla2_hernandez;
 
+import compla2_hernandez.procesos.Archivos;
+import compla2_hernandez.ventanas.Ventana;
+
 /**
  *
  * @author team1
@@ -13,7 +16,10 @@ public class Principal {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        Archivos archivo = new Archivos();
-        archivo.openArchivo("C:\\Users\\team1\\Desktop\\prueba.txt"); 
+        Ventana v = new Ventana();
+        v.setVisible(true);
+        Archivos a = new Archivos();
+        String x = (a.openArchivo("C:\\Users\\team1\\Desktop\\pruebas.txt")); 
+        System.out.print(x);
     }
 }
