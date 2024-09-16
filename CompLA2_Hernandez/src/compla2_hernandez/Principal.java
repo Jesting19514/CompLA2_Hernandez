@@ -19,7 +19,7 @@ public class Principal {
         Ventana v = new Ventana();
         v.setVisible(true);
         Archivos a = new Archivos();
-        String x = (a.openArchivo("C:\\Users\\team1\\Desktop\\pruebas.txt")); 
+        String x = (Archivos.getContenido("C:\\Users\\team1\\Desktop\\pruebas.txt")); 
         System.out.print(x);
     }
 }
