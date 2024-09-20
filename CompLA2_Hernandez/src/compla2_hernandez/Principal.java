@@ -18,8 +18,6 @@ public class Principal {
     public static void main(String[] args) {
         Ventana v = new Ventana();
         v.setVisible(true);
-        Archivos a = new Archivos();
-        String x = (Archivos.getContenido("C:\\Users\\team1\\Desktop\\pruebas.txt")); 
-        System.out.print(x);
+        
     }
 }

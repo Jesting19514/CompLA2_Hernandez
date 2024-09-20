@@ -50,7 +50,7 @@ public class Ventana extends javax.swing.JFrame {
         txtContenido.setColumns(20);
         txtContenido.setRows(5);
         jScrollPane1.setViewportView(txtContenido);
-        txtContenido.setEditable(false);
+        txtContenido.setEditable(true);
 
         txtSalida.setColumns(20);
         txtSalida.setRows(5);
@@ -73,7 +73,7 @@ public class Ventana extends javax.swing.JFrame {
 
         Procesar.setText("Procesar");
 
-        menuSuma.setText("Procesa");
+        menuSuma.setText("Separar");
         menuSuma.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 menuSumaActionPerformed(evt);
@@ -131,7 +131,7 @@ public class Ventana extends javax.swing.JFrame {
     }//GEN-LAST:event_mnuAbrirActionPerformed
 
     private void menuSumaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSumaActionPerformed
-       Archivos.procesaContenido(this);
+       Archivos.asociaList(this);
     }//GEN-LAST:event_menuSumaActionPerformed
 
     public JTextArea getTxtContenido() {
