@@ -50,7 +50,7 @@ public class Ventana extends javax.swing.JFrame {
         txtContenido.setColumns(20);
         txtContenido.setRows(5);
         jScrollPane1.setViewportView(txtContenido);
-        txtContenido.setEditable(true);
+        txtContenido.setEditable(false);
 
         txtSalida.setColumns(20);
         txtSalida.setRows(5);
@@ -121,17 +121,17 @@ public class Ventana extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void mnuAbrirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_mnuAbrirActionPerformed
-       File f = Archivos.getFile(this);
+        File f = Archivos.getFile(this);
         if (f != null) {
             txtContenido.setText(Archivos.getContenido(f.getAbsolutePath()));
             lblArchivo.setText("Ruta del archivo: " + f.getAbsolutePath());
         }
-       
-    
+
+
     }//GEN-LAST:event_mnuAbrirActionPerformed
 
     private void menuSumaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuSumaActionPerformed
-       Archivos.asociaList(this);
+        Archivos.asociaList(this);
     }//GEN-LAST:event_menuSumaActionPerformed
 
     public JTextArea getTxtContenido() {
