@@ -99,94 +99,98 @@ public static void asociaList(Ventana v) {
     }
 }   
 
- private static int precedencia(char operador) {
+
+
+    private static int precedencia(char operador) {
         switch (operador) {
             case '^':
-                return 4;
+                return 3;
             case '*':
             case '/':
-                return 3;
+                return 2;
             case '+':
             case '-':
-                return 2;
-            case '=':
                 return 1;
+            case '=':
+                return 0;
             case '(':
             case ')':
-                return 0; // Los paréntesis no afectan la precedencia
+                return -1; // Los paréntesis no afectan la precedencia
             default:
                 return -1; // Cualquier otro carácter no reconocido
         }
-}
+    }
 
-  private static String convertirInfijoAPostfijo(String expresion) {
-    StringBuilder resultado = new StringBuilder();
-    Stack<Character> pila = new Stack<>();
+    private static String convertirInfijoAPostfijo(String expresion) {
+        StringBuilder resultado = new StringBuilder();
+        Stack<Character> pila = new Stack<>();
 
-    for (int i = 0; i < expresion.length(); i++) {
-        char caracter = expresion.charAt(i);
-        
-        // Ignorar espacios
-        if (Character.isWhitespace(caracter)) {
-            continue;
-        }
+        for (int i = 0; i < expresion.length(); i++) {
+            char caracter = expresion.charAt(i);
 
-        // Si el carácter es un operando (letras o números)
-        if (Character.isLetterOrDigit(caracter)) {
-            resultado.append(caracter);
-        } 
-        // Si es un paréntesis de apertura
-        else if (caracter == '(') {
-            pila.push(caracter);
-        } 
-        // Si es un paréntesis de cierre
-        else if (caracter == ')') {
-            while (!pila.isEmpty() && pila.peek() != '(') {
-                resultado.append(pila.pop());
+            // Ignorar espacios
+            if (Character.isWhitespace(caracter)) {
+                continue;
             }
-            if (!pila.isEmpty() && pila.peek() == '(') {
-                pila.pop(); // Eliminar el '(' de la pila
-            } else {
-                return "Error: falta paréntesis de apertura.";
-            }
-        } 
-        // Si es un operador
-        else {
-            while (!pila.isEmpty() && precedencia(caracter) <= precedencia(pila.peek())) {
-                // Evitar desapilar '='
-                if (pila.peek() == '=') {
-                    break;
+
+            // Si el carácter es un operando (letras o números)
+            if (Character.isLetterOrDigit(caracter)) {
+                resultado.append(caracter);
+            } 
+            // Si es un paréntesis de apertura
+            else if (caracter == '(') {
+                pila.push(caracter);
+            } 
+            // Si es un paréntesis de cierre
+            else if (caracter == ')') {
+                while (!pila.isEmpty() && pila.peek() != '(') {
+                    resultado.append(pila.pop());
                 }
-                resultado.append(pila.pop());
+                if (!pila.isEmpty() && pila.peek() == '(') {
+                    pila.pop(); // Eliminar el '(' de la pila
+                } else {
+                    return "Error: falta paréntesis de apertura.";
+                }
+            } 
+            // Si es un operador
+            else if (esOperador(caracter)) {
+                while (!pila.isEmpty() && precedencia(caracter) <= precedencia(pila.peek())) {
+                    // Evitar desapilar '='
+                    if (pila.peek() == '=') {
+                        break;
+                    }
+                    resultado.append(pila.pop());
+                }
+                pila.push(caracter);
             }
-            pila.push(caracter);
         }
+
+        // Desapilar cualquier operador restante
+        while (!pila.isEmpty()) {
+            if (pila.peek() == '(') {
+                return "Error: falta paréntesis de cierre.";
+            }
+            resultado.append(pila.pop());
+        }
+
+        return resultado.toString();
     }
 
-    // Desapilar cualquier operador restante
-    while (!pila.isEmpty()) {
-        if (pila.peek() == '(') {
-            return "Error: falta paréntesis de cierre.";
-        }
-        resultado.append(pila.pop());
+    private static boolean esOperador(char simbolo) {
+        return "+-*/^".indexOf(simbolo) >= 0;
     }
 
-    return resultado.toString();
-}
-
-
-
-    
-    
     public static void infijoPostfijo(Ventana v) {
         v.getTxtSalida().setText(""); 
         String contenido = v.getTxtContenido().getText().trim();
-        
+
         if (!contenido.isEmpty()) {
             String postfijo = convertirInfijoAPostfijo(contenido);
             v.getTxtSalida().setText(postfijo); // Mostrar la expresión postfija en el campo de salida
         }
     }
+
+
 
     public static void triplos(Ventana v) {
         v.getTxtSalida().setText(""); 
