@@ -42,6 +42,8 @@ public class Ventana extends javax.swing.JFrame {
         mnuAbrir = new javax.swing.JMenuItem();
         Procesar = new javax.swing.JMenu();
         menuSuma = new javax.swing.JMenuItem();
+        jMenuItem1 = new javax.swing.JMenuItem();
+        Triplos = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -80,6 +82,22 @@ public class Ventana extends javax.swing.JFrame {
             }
         });
         Procesar.add(menuSuma);
+
+        jMenuItem1.setText("Infijo a Postfijo");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        Procesar.add(jMenuItem1);
+
+        Triplos.setText("Triplos");
+        Triplos.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                TriplosActionPerformed(evt);
+            }
+        });
+        Procesar.add(Triplos);
 
         jMenuBar1.add(Procesar);
 
@@ -134,6 +152,14 @@ public class Ventana extends javax.swing.JFrame {
         Archivos.asociaList(this);
     }//GEN-LAST:event_menuSumaActionPerformed
 
+    private void TriplosActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TriplosActionPerformed
+        Archivos.triplos(this);        // TODO add your handling code here:
+    }//GEN-LAST:event_TriplosActionPerformed
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        Archivos.infijoPostfijo(this);
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
     public JTextArea getTxtContenido() {
         return txtContenido;
     }
@@ -145,7 +171,9 @@ public class Ventana extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JInternalFrame JFrameArchivo;
     private javax.swing.JMenu Procesar;
+    private javax.swing.JMenuItem Triplos;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblArchivo;
