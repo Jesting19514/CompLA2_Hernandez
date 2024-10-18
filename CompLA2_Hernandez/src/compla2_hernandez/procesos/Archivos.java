@@ -119,13 +119,18 @@ public static void asociaList(Ventana v) {
         }
 }
 
-    private static String convertirInfijoAPostfijo(String expresion) {
+  private static String convertirInfijoAPostfijo(String expresion) {
     StringBuilder resultado = new StringBuilder();
     Stack<Character> pila = new Stack<>();
-    
+
     for (int i = 0; i < expresion.length(); i++) {
         char caracter = expresion.charAt(i);
         
+        // Ignorar espacios
+        if (Character.isWhitespace(caracter)) {
+            continue;
+        }
+
         // Si el carácter es un operando (letras o números)
         if (Character.isLetterOrDigit(caracter)) {
             resultado.append(caracter);
@@ -147,23 +152,17 @@ public static void asociaList(Ventana v) {
         } 
         // Si es un operador
         else {
-            // Manejar el operador '=' de manera especial: debería ser procesado al final.
-            if (caracter == '=') {
-                // Apilamos el '=' al final, ya que tiene la precedencia más baja.
-                while (!pila.isEmpty() && pila.peek() != '(') {
-                    resultado.append(pila.pop());
+            while (!pila.isEmpty() && precedencia(caracter) <= precedencia(pila.peek())) {
+                // Evitar desapilar '='
+                if (pila.peek() == '=') {
+                    break;
                 }
-                pila.push(caracter);
-            } else {
-                // Para otros operadores, respetamos la precedencia
-                while (!pila.isEmpty() && precedencia(caracter) <= precedencia(pila.peek())) {
-                    resultado.append(pila.pop());
-                }
-                pila.push(caracter);
+                resultado.append(pila.pop());
             }
+            pila.push(caracter);
         }
     }
-    
+
     // Desapilar cualquier operador restante
     while (!pila.isEmpty()) {
         if (pila.peek() == '(') {
@@ -171,9 +170,11 @@ public static void asociaList(Ventana v) {
         }
         resultado.append(pila.pop());
     }
-    
+
     return resultado.toString();
 }
+
+
 
     
     
