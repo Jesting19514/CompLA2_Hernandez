@@ -52,45 +52,49 @@ public class Archivos {
         return null;
     }
 
-    public static ArrayList<String> getList(Ventana v) {
-        v.getTxtSalida().setText("");
-        String contenido = v.getTxtContenido().getText().trim();
-        String exp = "([a-zA-Z]\\w*)|([1-9]\\d*|0)|\\>=|\\<=|==|!=|>|<|\\+|\\-|\\*|\\/|\\(|\\)|;|,|\\.";
-        Pattern patron = Pattern.compile(exp);
-        Matcher matcher = patron.matcher(contenido);
+  public static ArrayList<Lexema> getList(Ventana v) {
+    v.getTxtSalida().setText(""); 
+    String contenido = v.getTxtContenido().getText().trim();
+    String exp = "([a-zA-Z]\\w*)|([1-9]\\d*|0)|\\>=|\\<=|==|!=|>|<|\\+|\\-|\\*|\\/|\\(|\\)|;|,|\\.";
+    Pattern patron = Pattern.compile(exp);
+    Matcher matcher = patron.matcher(contenido);
 
-        ArrayList<String> al = new ArrayList<String>();
+    while (matcher.find()) {
+        String parte = matcher.group();
+        int tokenNumber = TablaDeTokens.getNumero(parte);
 
-        while (matcher.find()) {
-            String parte = matcher.group();
-            int tokenNumber = TablaDeTokens.getNumero(parte);
-
-            if (parte.matches("[>=\\<=\\==\\!=\\>\\<]+")) {
-                al.add(parte + " Operadores lógicos - Token: " + tokenNumber + "\n");
-                continue;
-            }
-            if (parte.matches("[+\\-\\*\\/]+")) {
-                al.add(parte + " Operadores aritméticos - Token: " + tokenNumber + "\n");
-                continue;
-            }
-            if (parte.matches("[(\\)\\;\\,\\.]+")) {
-                al.add(parte + " Separadores o agrupadores - Token: " + tokenNumber + "\n");
-                continue;
-            }
-            if (parte.matches("\\d+")) {
-                al.add(parte + " Números - Token: " + tokenNumber + "\n");
-            } else if (parte.matches("[a-zA-Z]\\w*")) {
-                al.add(parte + " Identificadores - Token: " + tokenNumber + "\n");
-            }
+        if (parte.matches("[>=\\<=\\==\\!=\\>\\<]+")) {
+            Lexema lexema = new Lexema(tokenNumber, parte, 0, "Separador");
+            Lexema.addLexema(lexema);
+            continue;
         }
-
-        return al;
-    }
-
-    public static void asociaList(Ventana v) {
-        ArrayList<String> list = getList(v);
-        for (String item : list) {
-            v.getTxtSalida().append(item);
+        if (parte.matches("[+\\-\\*\\/]+")) {
+            Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador Aritmético");
+            Lexema.addLexema(lexema);
+            continue;
+        }
+        if (parte.matches("[(\\)\\;\\,\\.]+")) {
+            Lexema lexema = new Lexema(tokenNumber, parte, 0, "Separador o Agrupador");
+            Lexema.addLexema(lexema);
+            continue;
+        }
+        if (parte.matches("\\d+")) {
+            Lexema lexema = new Lexema(tokenNumber, parte, 0, "Número");
+            Lexema.addLexema(lexema);
+        } else if (parte.matches("[a-zA-Z]\\w*")) {
+            Lexema lexema = new Lexema(tokenNumber, parte, 0, "Identificador");
+            Lexema.addLexema(lexema);
         }
     }
+
+    return Lexema.getArrLexema();  
+}
+
+
+public static void asociaList(Ventana v) {
+    ArrayList<Lexema> list = getList(v);
+    for (Lexema lexema : list) {
+        v.getTxtSalida().append(lexema.toString() + "\n");  
+    }
+}
 }

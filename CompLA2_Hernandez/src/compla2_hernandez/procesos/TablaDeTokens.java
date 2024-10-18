@@ -53,12 +53,12 @@ public class TablaDeTokens {
             case "!=":
                 return 56;
             default:
-                if (dato.matches("[1-9]\\d*")) {
+                if (dato.matches("[1-9]\\d*")) {   //digitos
                     return 2;
-                } else if (dato.matches("[a-zA-Z][a-zA-Z0-9_]*")) {
+                } else if (dato.matches("[a-zA-Z][a-zA-Z0-9_]*")) { //identificadores
                     return 1;
                 } else {
-                    return -1;
+                    return -1;  //desconocido
                 }
         }
     }
