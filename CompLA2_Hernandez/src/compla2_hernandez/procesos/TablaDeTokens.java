@@ -24,6 +24,8 @@ public class TablaDeTokens {
                 return 12;
             case "/":
                 return 13;
+            case "^":
+                return 13;
             case ":=":
                 return 14;
             case "_":
@@ -52,6 +54,8 @@ public class TablaDeTokens {
                 return 55;
             case "!=":
                 return 56;
+             case "=":
+                return 57;
             default:
                 if (dato.matches("[1-9]\\d*")) {   //digitos
                     return 2;
