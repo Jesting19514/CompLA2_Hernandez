@@ -6,64 +6,67 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Lexema {
-   private int token;
-   private String cadena;
-   private int valor;
-   private String grupo;
 
- 
-   private static ArrayList<Lexema> arrLexema = new ArrayList<Lexema>();
+    private int token;
+    private String cadena;
+    private int valor;
+    private String grupo;
 
-   public Lexema(int token, String cadena, int valor, String grupo) {
-       this.token = token;
-       this.cadena = cadena;
-       this.valor = valor;
-       this.grupo = grupo;
-   }
+    private static ArrayList<Lexema> arrLexema = new ArrayList<Lexema>();
 
-   
-   public int getToken() {
-       return token;
-   }
+    public Lexema(int token, String cadena, int valor, String grupo) {
+        this.token = token;
+        this.cadena = cadena;
+        this.valor = valor;
+        this.grupo = grupo;
+    }
 
-   public void setToken(int token) {
-       this.token = token;
-   }
+    public static void limpiarLista() {
+        arrLexema.clear(); 
+    }
 
-   public String getCadena() {
-       return cadena;
-   }
+    public int getToken() {
+        return token;
+    }
 
-   public void setCadena(String cadena) {
-       this.cadena = cadena;
-   }
+    public void setToken(int token) {
+        this.token = token;
+    }
 
-   public int getValor() {
-       return valor;
-   }
+    public String getCadena() {
+        return cadena;
+    }
 
-   public void setValor(int valor) {
-       this.valor = valor;
-   }
+    public void setCadena(String cadena) {
+        this.cadena = cadena;
+    }
 
-   public String getGrupo() {
-       return grupo;
-   }
+    public int getValor() {
+        return valor;
+    }
 
-   public void setGrupo(String grupo) {
-       this.grupo = grupo;
-   }
+    public void setValor(int valor) {
+        this.valor = valor;
+    }
 
-   public static void addLexema(Lexema lexema) {
-       arrLexema.add(lexema);
-   }
+    public String getGrupo() {
+        return grupo;
+    }
 
-   public static ArrayList<Lexema> getArrLexema() {
-       return arrLexema;
-   }
+    public void setGrupo(String grupo) {
+        this.grupo = grupo;
+    }
 
-   @Override
-   public String toString() {
-       return "Token: " + token + ", Cadena: " + cadena + ", Valor: " + valor + ", Grupo: " + grupo;
-   }
+    public static void addLexema(Lexema lexema) {
+        arrLexema.add(lexema);
+    }
+
+    public static ArrayList<Lexema> getArrLexema() {
+        return arrLexema;
+    }
+
+    @Override
+    public String toString() {
+        return "Token: " + token + ", Cadena: " + cadena + ", Valor: " + valor + ", Grupo: " + grupo;
+    }
 }

@@ -17,12 +17,13 @@ public class Cuadruplos {
         String operando1 = operandos.pop();  // Primer operando (desapilado)
         String operador = operadores.pop();  // Operador (desapilado)
 
-        // Generar cuadruplo en el formato: (operador, operando1, operando2, resultado)
-        String cuadruplo = String.format("Cuadruplo %d (%s, %s, %s, Indice %d)", indiceCuadruplo, operador, operando1, operando2, indiceCuadruplo);
+        String excepcion = " ";
+        if (operador.equals("=") || operador.equals("<") || operador.equals("<=") || operador.equals(">")
+                || operador.equals(">=") || operador.equals("!=") || operador.equals("==")) {
+            excepcion = " ";
+        }
+        String cuadruplo = String.format("Indice %d (%s, %s, %s, %s)", indiceCuadruplo, operador, operando1, operando2, excepcion);
         cuadruplosGenerados.append(cuadruplo).append("\n");
-
-        // Apilamos el índice resultante como operando para la siguiente operación
         operandos.push("Indice " + indiceCuadruplo);
     }
 }
-

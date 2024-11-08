@@ -49,7 +49,7 @@ public class Archivos {
     }
 
     public static ArrayList<Lexema> getList(Ventana v) {
-        v.getTxtSalida().setText(""); 
+        v.getTxtSalida().setText("");
         String contenido = v.getTxtContenido().getText().trim();
         String exp = "([a-zA-Z]\\w*)|([1-9]\\d*|0)|\\>=|\\<=|==|!=|>|<|\\+|\\-|\\*|\\/|\\(|\\)|;|,|\\.|\\^|\\=";
         Pattern patron = Pattern.compile(exp);
@@ -83,27 +83,28 @@ public class Archivos {
             }
         }
 
-        return Lexema.getArrLexema();  
+        return Lexema.getArrLexema();
     }
 
     public static ArrayList<Lexema> asociaList(Ventana v) {
+        Lexema.limpiarLista();
         ArrayList<Lexema> list = getList(v);
         for (Lexema lexema : list) {
             v.getTxtSalida().append(lexema.toString() + "\n");
         }
-        return list; 
+        return list;
     }
 
     private static int precedencia(String operador) {
         switch (operador) {
             case "^":
-                return 4;  // Mayor precedencia para la potencia
+                return 4;
             case "*":
             case "/":
-                return 3;  // Multiplicación y división tienen precedencia media
+                return 3;
             case "+":
             case "-":
-                return 2;  // Suma y resta tienen precedencia menor
+                return 2;
             case "=":
             case "<":
             case "<=":
@@ -111,51 +112,88 @@ public class Archivos {
             case ">=":
             case "!=":
             case "==":
-                return 1;  // Operadores relacionales tienen la precedencia más baja
+                return 1;
             default:
-                return -1; // Cualquier otro carácter no reconocido
+                return -1;
         }
     }
 
     public static void triplos(Ventana v) {
-        ArrayList<Lexema> lexemas = asociaList(v);  // Obtiene la lista de lexemas ya procesados
+        v.getTxtSalida().setText("");
+        ArrayList<Lexema> lexemas = asociaList(v);  
         Stack<String> operandos = new Stack<>();
         Stack<String> operadores = new Stack<>();
         StringBuilder triplosGenerados = new StringBuilder();
         int indiceTriplo = 1;
 
         for (Lexema lexema : lexemas) {
-            String parte = lexema.getCadena(); // Obtiene el valor textual del lexema
-            String tipo = lexema.getGrupo();   // Obtiene el tipo del lexema
+            String parte = lexema.getCadena();
+            String tipo = lexema.getGrupo();
 
             if (tipo.equals("Número") || tipo.equals("Identificador")) {
                 operandos.push(parte);
             } else if (parte.equals("(")) {
                 operadores.push("(");
             } else if (parte.equals(")")) {
-                // Procesar hasta encontrar el paréntesis de apertura
+
                 while (!operadores.isEmpty() && !operadores.peek().equals("(")) {
                     Triplos.generarTriplo(operadores, operandos, triplosGenerados, indiceTriplo++);
                 }
-                operadores.pop(); // Elimina el '('
+                operadores.pop();
             } else if (tipo.equals("Operador Aritmético") || tipo.equals("Separador")) {
-                // Desapilar operadores de mayor precedencia para generar triplos correctos
+
                 while (!operadores.isEmpty() && precedencia(operadores.peek()) >= precedencia(parte)) {
                     Triplos.generarTriplo(operadores, operandos, triplosGenerados, indiceTriplo++);
                 }
-                operadores.push(parte); // Apilamos el operador actual
+                operadores.push(parte);
             }
         }
 
-        // Procesar cualquier operador restante en la pila
         while (!operadores.isEmpty()) {
             Triplos.generarTriplo(operadores, operandos, triplosGenerados, indiceTriplo++);
         }
 
-        // Muestra el resultado en el campo de salida
         v.getTxtSalida().setText(triplosGenerados.toString());
     }
-     public static void cuadruplos(Ventana v) {
- 
-     }
+
+    public static void cuadruplos(Ventana v) {
+
+        v.getTxtSalida().setText("");
+
+        ArrayList<Lexema> lexemas = asociaList(v);
+        Stack<String> operandos = new Stack<>();
+        Stack<String> operadores = new Stack<>();
+        StringBuilder cuadruplosGenerados = new StringBuilder();
+        int indiceCuadruplo = 1;
+
+        for (Lexema lexema : lexemas) {
+            String parte = lexema.getCadena();
+            String tipo = lexema.getGrupo();
+
+            if (tipo.equals("Número") || tipo.equals("Identificador")) {
+                operandos.push(parte);
+            } else if (parte.equals("(")) {
+                operadores.push("(");
+            } else if (parte.equals(")")) {
+
+                while (!operadores.isEmpty() && !operadores.peek().equals("(")) {
+                    Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++);
+                }
+                operadores.pop();
+            } else if (tipo.equals("Operador Aritmético") || tipo.equals("Separador")) {
+
+                while (!operadores.isEmpty() && precedencia(operadores.peek()) >= precedencia(parte)) {
+                    Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++);
+                }
+                operadores.push(parte);
+            }
+        }
+
+        while (!operadores.isEmpty()) {
+            Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++);
+        }
+
+        v.getTxtSalida().setText(cuadruplosGenerados.toString());
+    }
+
 }
