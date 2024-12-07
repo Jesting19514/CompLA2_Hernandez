@@ -56,6 +56,32 @@ public class TablaDeTokens {
                 return 56;
              case "=":
                 return 57;
+            case "begin": 
+                return 100;
+            case "end": 
+                return 101;
+            case "const": 
+                return 102;
+            case "var": 
+                return 103;
+            case "procedure": 
+                return 104;
+            case "call": 
+                return 105;
+            case "if": 
+                return 106;
+            case "then": 
+                return 107;
+            case "else": 
+                return 108;
+            case "while": 
+                return 109;
+            case "do": 
+                return 110;
+            case "odd": 
+                return 111;
+            case "read": 
+                return 111;
             default:
                 if (dato.matches("[1-9]\\d*")) {   //digitos
                     return 2;

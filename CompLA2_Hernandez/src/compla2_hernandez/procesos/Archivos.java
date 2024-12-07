@@ -51,14 +51,19 @@ public class Archivos {
     public static ArrayList<Lexema> getList(Ventana v) {
         v.getTxtSalida().setText("");
         String contenido = v.getTxtContenido().getText().trim();
-        String exp = "([a-zA-Z]\\w*)|([1-9]\\d*|0)|\\>=|\\<=|==|!=|>|<|\\+|\\-|\\*|\\/|\\(|\\)|;|,|\\.|\\^|\\=";
+       String exp = "(\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read)\\b)|" +
+             "([a-zA-Z]\\w*)|([0-9]+)|(>=|<=|==|!=|>|<|=)|([+\\-*/^])|([(),;\\.])";
         Pattern patron = Pattern.compile(exp);
         Matcher matcher = patron.matcher(contenido);
 //if while for
         while (matcher.find()) {
             String parte = matcher.group();
             int tokenNumber = TablaDeTokens.getNumero(parte);
-
+            if (parte.matches("\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read)\\b")) {
+                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Palabra Reservada");
+                Lexema.addLexema(lexema);
+                continue;
+            }
             if (parte.matches("[>=\\<=\\==\\!=\\>\\<\\=]+")) {
                 Lexema lexema = new Lexema(tokenNumber, parte, 0, "Separador");
                 Lexema.addLexema(lexema);
@@ -162,15 +167,19 @@ public class Archivos {
     v.getTxtSalida().setText(triplosFinales.toString());
 }
 
-    public static void cuadruplos(Ventana v) {
-    v.getTxtSalida().setText(""); // Limpiamos la salida
+  public static void cuadruplos(Ventana v) {
+    v.getTxtSalida().setText("");  // Limpiamos la salida
 
-    ArrayList<Lexema> lexemas = asociaList(v);  // Obtenemos los lexemas
-    Stack<String> operandos = new Stack<>();
-    Stack<String> operadores = new Stack<>();
-    ArrayList<String> cuadruplosGenerados = new ArrayList<>();  // Usamos ArrayList en lugar de StringBuilder
+    // Obtenemos los lexemas desde la ventana
+    ArrayList<Lexema> lexemas = asociaList(v);
+    Stack<String> operandos = new Stack<>();  // Pila de operandos
+    Stack<String> operadores = new Stack<>();  // Pila de operadores
+    Stack<Integer> incompletos = new Stack<>();  // Pila de saltos incompletos
+    Stack<Integer> ciclos = new Stack<>();  // Pila de saltos para ciclos
+    ArrayList<String> cuadruplosGenerados = new ArrayList<>();
     int indiceCuadruplo = 1;
 
+    // Recorrer los lexemas para generar cuadruplos
     for (Lexema lexema : lexemas) {
         String parte = lexema.getCadena();
         String tipo = lexema.getGrupo();
@@ -180,21 +189,41 @@ public class Archivos {
         } else if (parte.equals("(")) {
             operadores.push("(");  // Empujamos el paréntesis
         } else if (parte.equals(")")) {
+            // Se procesan los operadores hasta encontrar el paréntesis de apertura
             while (!operadores.isEmpty() && !operadores.peek().equals("(")) {
-                Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++);
+                Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++, ciclos, incompletos);
             }
             operadores.pop();  // Desapilamos el paréntesis
-        } else if (tipo.equals("Operador Aritmético") || tipo.equals("Separador")) {
+        } else if (tipo.equals("Operador Aritmético") || tipo.equals("Operador Relacional")) {
+            // Generamos cuadruplos mientras la precedencia lo permita
             while (!operadores.isEmpty() && precedencia(operadores.peek()) >= precedencia(parte)) {
-                Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++);
+                Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++, ciclos, incompletos);
             }
             operadores.push(parte);  // Empujamos el operador
+        } else if (parte.equals("if") || parte.equals("while")) {
+            // Procesamos las estructuras de control
+            procesarEstructuraControl(parte, operadores, operandos, cuadruplosGenerados, indiceCuadruplo++, ciclos, incompletos);
+        } else if (parte.equals("then") || parte.equals("do")) {
+            // En el caso de que sea "then" o "do", tenemos que generar el salto correspondiente
+            if (parte.equals("then") && !incompletos.isEmpty()) {
+                // Completar salto para "if"
+                int salto = incompletos.pop();
+                cuadruplosGenerados.set(salto - 1, String.format("(<=, %s, %s, Índice %d)", operandos.peek(), operandos.peek(), indiceCuadruplo));
+            }
+            if (parte.equals("do") && !ciclos.isEmpty()) {
+                // Completar salto para "while"
+                int salto = ciclos.pop();
+                cuadruplosGenerados.set(salto - 1, String.format("(jmp, , , Índice %d)", indiceCuadruplo));
+            }
+        } else if (parte.equals(".")) {
+            // Cuando encontramos el ".", agregamos el cuadruplo de retorno (ret)
+            cuadruplosGenerados.add(String.format("(%s, , , )", "ret"));
         }
     }
 
     // Generamos los cuadruplos restantes
     while (!operadores.isEmpty()) {
-        Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++);
+        Cuadruplos.generarCuadruplo(operadores, operandos, cuadruplosGenerados, indiceCuadruplo++, ciclos, incompletos);
     }
 
     // Convertimos el ArrayList en un String para mostrarlo en la salida
@@ -206,4 +235,28 @@ public class Archivos {
     // Mostramos los cuadruplos generados en la salida
     v.getTxtSalida().setText(cuadruplosFinales.toString());
 }
+
+
+private static void procesarEstructuraControl(String parte, Stack<String> operadores, Stack<String> operandos,
+        ArrayList<String> cuadruplosGenerados, int indiceCuadruplo, Stack<Integer> ciclos, Stack<Integer> incompletos) {
+    if (parte.equals("if")) {
+        // Generamos el cuadruplo de comparación
+        String resultadoCondicion = "R" + indiceCuadruplo;
+        operandos.push(resultadoCondicion);
+        cuadruplosGenerados.add(String.format("(CMP, %s, %s, %s)", operandos.peek(), operadores.peek(), resultadoCondicion));
+        operadores.pop();
+        incompletos.push(indiceCuadruplo);
+    } else if (parte.equals("while")) {
+        // Generamos el cuadruplo de salto a la condición del ciclo
+        ciclos.push(indiceCuadruplo);
+        incompletos.push(indiceCuadruplo);
+        cuadruplosGenerados.add(String.format("(JMP, , , %s)", ciclos.peek()));
+    }
 }
+
+
+}
+
+
+
+    
