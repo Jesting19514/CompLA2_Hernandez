@@ -59,10 +59,16 @@ public class Archivos {
         while (matcher.find()) {
             String parte = matcher.group();
             int tokenNumber = TablaDeTokens.getNumero(parte);
+            
+            if (parte.matches("\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read|write)\\b")) {
+                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Palabra Reservada");
+                Lexema.addLexema(lexema);
+                continue;
+            }
 
             if (parte.matches(">=|<=|==|!=|>|<|="))
                                                      {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Separador");
+                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador Relacional");
                 Lexema.addLexema(lexema);
                 continue;
             }
@@ -209,4 +215,37 @@ public class Archivos {
     // Mostramos los cuadruplos generados en la salida
     v.getTxtSalida().setText(cuadruplosFinales.toString());
 }
+
+    
+public static void analizarCodigo(Ventana v) {
+    try {
+        System.out.println("Iniciando análisis...");
+        ArrayList<Lexema> lexemas = Archivos.asociaList(v); // Generar lexemas
+        System.out.println("Lexemas obtenidos: " + lexemas);
+        Parser parser = new Parser(lexemas);               // Crear instancia del parser
+        System.out.println("Parser inicializado.");
+        parser.program();                                  // Iniciar análisis desde "program"
+        System.out.println("Análisis completado.");
+        
+        // Obtén e imprime los cuádruplos generados
+        ArrayList<String> cuadruplos = parser.getCuadruplos();
+        if (!cuadruplos.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("Cuádruplos generados:\n");
+            for (String cuadruplo : cuadruplos) {
+                sb.append(cuadruplo).append("\n");
+            }
+            System.out.println(sb.toString()); // Imprime en consola
+            v.getTxtSalida().setText(sb.toString()); // Muestra en el componente de salida
+        } else {
+            System.out.println("No se generaron cuádruplos.");
+            v.getTxtSalida().setText("No se generaron cuádruplos.");
+        }
+    } catch (Exception e) {
+        System.err.println("Error en el análisis: " + e.getMessage());
+        v.getTxtSalida().setText("Error: " + e.getMessage()); // Mostrar errores
+    }
+   
+}
+
 }

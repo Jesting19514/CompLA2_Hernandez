@@ -44,6 +44,7 @@ public class Ventana extends javax.swing.JFrame {
         menuSuma = new javax.swing.JMenuItem();
         Triplos = new javax.swing.JMenuItem();
         jMenuItem1 = new javax.swing.JMenuItem();
+        menuCompila = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -98,6 +99,14 @@ public class Ventana extends javax.swing.JFrame {
             }
         });
         Procesar.add(jMenuItem1);
+
+        menuCompila.setText("Compila");
+        menuCompila.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                menuCompilaActionPerformed(evt);
+            }
+        });
+        Procesar.add(menuCompila);
 
         jMenuBar1.add(Procesar);
 
@@ -160,6 +169,10 @@ public class Ventana extends javax.swing.JFrame {
         Archivos.cuadruplos(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
+    private void menuCompilaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_menuCompilaActionPerformed
+        Archivos.analizarCodigo(this);
+    }//GEN-LAST:event_menuCompilaActionPerformed
+
     public JTextArea getTxtContenido() {
         return txtContenido;
     }
@@ -177,6 +190,7 @@ public class Ventana extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JLabel lblArchivo;
+    private javax.swing.JMenuItem menuCompila;
     private javax.swing.JMenuItem menuSuma;
     private javax.swing.JMenuItem mnuAbrir;
     private javax.swing.JMenu mnuArchivo;

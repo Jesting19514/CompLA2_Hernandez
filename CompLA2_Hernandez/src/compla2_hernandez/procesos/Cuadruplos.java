@@ -28,6 +28,6 @@ public class Cuadruplos {
         cuadruplosGenerados.add(cuadruplo);
 
         // Volvemos a apilar el resultado del cuadruplo
-        operandos.push("Indice " + indiceCuadruplo);
+        operandos.push("R" + indiceCuadruplo);
     }
 }
