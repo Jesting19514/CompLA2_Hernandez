@@ -51,7 +51,8 @@ public class Archivos {
     public static ArrayList<Lexema> getList(Ventana v) {
         v.getTxtSalida().setText("");
         String contenido = v.getTxtContenido().getText().trim();
-        String exp = "([a-zA-Z]\\w*)|([1-9]\\d*|0)|\\>=|\\<=|==|!=|>|<|\\+|\\-|\\*|\\/|\\(|\\)|;|,|\\.|\\^|\\=";
+        String exp =  "(\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read)\\b)|" +
+             "([a-zA-Z]\\w*)|([0-9]+)|(>=|<=|==|!=|>|<|=)|([+\\-*/^])|([(),;\\.])";;
         Pattern patron = Pattern.compile(exp);
         Matcher matcher = patron.matcher(contenido);
 //if while for
@@ -59,7 +60,8 @@ public class Archivos {
             String parte = matcher.group();
             int tokenNumber = TablaDeTokens.getNumero(parte);
 
-            if (parte.matches("[>=\\<=\\==\\!=\\>\\<\\=]+")) {
+            if (parte.matches(">=|<=|==|!=|>|<|="))
+                                                     {
                 Lexema lexema = new Lexema(tokenNumber, parte, 0, "Separador");
                 Lexema.addLexema(lexema);
                 continue;
@@ -98,6 +100,7 @@ public class Archivos {
     private static int precedencia(String operador) {
         switch (operador) {
             case "^":
+            case "!":
                 return 4;
             case "*":
             case "/":
