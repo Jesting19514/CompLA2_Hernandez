@@ -52,7 +52,7 @@ public class Archivos {
         v.getTxtSalida().setText("");
         String contenido = v.getTxtContenido().getText().trim();
         String exp =  "(\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read)\\b)|" +
-             "([a-zA-Z]\\w*)|([0-9]+)|(>=|<=|==|!=|>|<|=)|([+\\-*/^])|([(),;\\.])";;
+             "([a-zA-Z]\\w*)|([0-9]+)|(:=)|(>=|<=|==|!=|>|<|=)|([+\\-*/^])|([(),;\\.])";;
         Pattern patron = Pattern.compile(exp);
         Matcher matcher = patron.matcher(contenido);
 //if while for
@@ -82,6 +82,12 @@ public class Archivos {
                 Lexema.addLexema(lexema);
                 continue;
             }
+            if (parte.matches(":=")) {
+                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador de Asignación");
+                Lexema.addLexema(lexema);
+                continue;
+            }
+
             if (parte.matches("\\d+")) {
                 Lexema lexema = new Lexema(tokenNumber, parte, 0, "Número");
                 Lexema.addLexema(lexema);
@@ -89,6 +95,7 @@ public class Archivos {
                 Lexema lexema = new Lexema(tokenNumber, parte, 0, "Identificador");
                 Lexema.addLexema(lexema);
             }
+            
         }
 
         return Lexema.getArrLexema();

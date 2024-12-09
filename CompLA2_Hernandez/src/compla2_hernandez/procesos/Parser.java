@@ -43,75 +43,81 @@ public class Parser {
 
     private void block() throws Exception {
     // Manejo de constantes
-    if (match("const")) {
-        do {
-            match("Identificador");
-            match("=");
-            match("Número");
-        } while (match(","));
-        if (!match(";")) {
-            throw new Exception("Falta ';' después de declaración de constantes");
-        }
-    }
-
-    // Manejo de variables
-    if (match("var")) {
-        do {
-            match("Identificador");
-        } while (match(","));
-        if (!match(";")) {
-            throw new Exception("Falta ';' después de declaración de variables");
-        }
-    }
-
-    // Manejo de procedimientos
-    while (match("procedure")) {
+    
+if (match("const")) {
+    do {
         match("Identificador");
-        if (!match(";")) {
-            throw new Exception("Falta ';' después de nombre de procedimiento");
-        }
-        block();
-        if (!match(";")) {
-            throw new Exception("Falta ';' después de bloque de procedimiento");
-        }
+        match("=");
+        match("Número");
+    } while (match(",")); // Acepta múltiples declaraciones separadas por coma
+    if (!match(";")) {    // Pero debe terminar con un punto y coma
+        throw new Exception("Falta ';' después de declaración de constantes");
     }
+}
 
-    // Manejo del cuerpo principal
-    statement();
+if (match("var")) {
+    do {
+        match("Identificador");
+    } while (match(",")); // Acepta múltiples variables separadas por coma
+    if (!match(";")) {    // Pero debe terminar con un punto y coma
+        throw new Exception("Falta ';' después de declaración de variables");
+    }
 }
 
 
-   private void statement() throws Exception {
+    // Manejo de procedimientos
+    // En block()
+while (match("procedure")) {
+    match("Identificador");
+    if (!match(";")) {
+        throw new Exception("Falta ';' después de nombre de procedimiento");
+    }
+    block(); // Procedimiento tiene su propio bloque
+    if (!match(";")) {
+        throw new Exception("Falta ';' después de bloque de procedimiento");
+    }
+}
+
+// Luego continúa con el cuerpo principal
+statement();
+}
+
+
+  private void statement() throws Exception {
     System.out.println("Entra en statement");
 
     if (match("Identificador")) {
         String Identificador = previousLexema().getCadena();
-        match(":=");
+        if (!match(":=")) { // Verifica si se encuentra el operador de asignación correcto
+            throw new Exception("Esperado ':=' pero se encontró: " + currentLexema().getCadena());
+        }
         String resultadoDeExpresion = expression();
         cuadruplos.add(String.format("(:=, %s, , %s)", resultadoDeExpresion, Identificador));
     } else if (match("call")) {
         match("Identificador");
-    } else if (match("read")) { // Manejo de 'read'
-        match("Identificador");
-        String Identificador = previousLexema().getCadena();
-        cuadruplos.add(String.format("(read, , , %s)", Identificador));
-    } else if (match("write")) { // Manejo de 'write'
+    } else if (match("read")) {
+    if (!match("Identificador")) { // Verifica que `read` sea seguido de un identificador
+        throw new Exception("Se esperaba un identificador después de 'read'");
+    }
+    String identificador = previousLexema().getCadena();
+    cuadruplos.add(String.format("(read, , , %s)", identificador));
+    } else if (match("write")) {
         String resultadoDeExpresion = expression();
         cuadruplos.add(String.format("(write, %s, , )", resultadoDeExpresion));
     } else if (match("begin")) { // Manejo de bloques 'begin ... end'
-        do {
-            statement();
-        } while (match(";"));
-        if (!match("end")) {
-            throw new Exception("Falta 'end' al final del bloque 'begin'");
-        }
+    do {
+        statement(); // Analiza cada statement dentro del bloque
+    } while (match(";")); // Acepta múltiples statements separados por ';'
+    if (!match("end")) { // Verifica que el bloque cierre con 'end'
+        throw new Exception("Falta 'end' al final del bloque 'begin'");
+    }
     } else if (match("if")) {
-        String condicion = condition();
-        match("then");
-        cuadruplos.add(String.format("(jf, %s, , L%d)", condicion, tempCounter));
-        int saltoIndex = cuadruplos.size() - 1;
-        statement();
-        cuadruplos.set(saltoIndex, cuadruplos.get(saltoIndex).replace("L" + tempCounter, "L" + tempCounter));
+    String condicion = condition(); // Evalúa la condición
+    match("then");
+    String etiquetaFalsa = "L" + nuevoTemporal();
+    cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFalsa));
+    statement(); // Procesa el bloque dentro del `if`
+    cuadruplos.add(String.format("(label, , , %s)", etiquetaFalsa)); // Etiqueta falsa
     } else if (match("while")) {
         int inicioCondicion = cuadruplos.size();
         String condicion = condition();
@@ -127,72 +133,61 @@ public class Parser {
 }
 
 
+
     private String condition() throws Exception {
-        if (match("odd")) {
-            String exp = expression();
-            return String.format("(odd, %s, , )", exp);
-        } else {
-            String left = expression();
-            String operador = "";
-            if (match("=")) operador = "=";
-            else if (match("#")) operador = "!=";
-            else if (match("<")) operador = "<";
-            else if (match("<=")) operador = "<=";
-            else if (match(">")) operador = ">";
-            else if (match(">=")) operador = ">=";
-            else throw new Exception("Operador condicional no válido");
-
-            String right = expression();
-            String temp = nuevoTemporal();
-            cuadruplos.add(String.format("(%s, %s, %s, %s)", operador, left, right, temp));
-            return temp;
-        }
+    String ladoIzquierdo = expression();
+    if (match("=") || match("<>") || match("<") || match("<=") || match(">") || match(">=")) {
+        String operador = previousLexema().getCadena();
+        String ladoDerecho = expression();
+        cuadruplos.add(String.format("(%s, %s, %s, temp%d)", operador, ladoIzquierdo, ladoDerecho, tempCounter));
+        return "temp" + tempCounter++;
+    } else {
+        throw new Exception("Condición inválida: operador relacional esperado");
     }
+}
 
-    private String expression() throws Exception {
-        boolean hasSign = match("+") || match("-");
-        String resultado = term();
-        if (hasSign) {
-            String operador = previousLexema().getCadena();
-            String nuevoTemp = nuevoTemporal();
-            cuadruplos.add(String.format("(%s, 0, %s, %s)", operador, resultado, nuevoTemp));
-            resultado = nuevoTemp;
-        }
-        while (match("+") || match("-")) {
-            String operador = previousLexema().getCadena();
-            String termResult = term();
-            String temp = nuevoTemporal();
-            cuadruplos.add(String.format("(%s, %s, %s, %s)", operador, resultado, termResult, temp));
-            resultado = temp;
+
+private String expression() throws Exception {
+    String resultado = term();
+    while (currentLexema() != null && (match("+") || match("-"))) {
+        String operador = previousLexema().getCadena();
+        String siguienteTermino = term();
+        cuadruplos.add(String.format("(%s, %s, %s, temp%d)", operador, resultado, siguienteTermino, tempCounter));
+        resultado = "temp" + tempCounter++;
+    }
+    return resultado;
+}
+
+
+private String term() throws Exception {
+    String resultado = factor();
+    while (match("*") || match("/")) {
+        String operador = previousLexema().getCadena();
+        String siguienteFactor = factor();
+        cuadruplos.add(String.format("(%s, %s, %s, temp%d)", operador, resultado, siguienteFactor, tempCounter));
+        resultado = "temp" + tempCounter++;
+    }
+    return resultado;
+}
+
+
+  private String factor() throws Exception {
+    if (match("Número")) {
+        return previousLexema().getCadena(); // Devuelve el número
+    } else if (match("Identificador")) {
+        return previousLexema().getCadena(); // Devuelve el identificador
+    } else if (match("(")) {
+        String resultado = expression(); // Procesa una subexpresión entre paréntesis
+        if (!match(")")) {
+            throw new Exception("Falta ')' para cerrar la expresión");
         }
         return resultado;
+    } else {
+        throw new Exception("Factor inválido: se esperaba un número, identificador o expresión entre paréntesis.");
     }
+}
 
-    private String term() throws Exception {
-        String resultado = factor();
-        while (match("*") || match("/")) {
-            String operador = previousLexema().getCadena();
-            String factorResult = factor();
-            String temp = nuevoTemporal();
-            cuadruplos.add(String.format("(%s, %s, %s, %s)", operador, resultado, factorResult, temp));
-            resultado = temp;
-        }
-        return resultado;
-    }
 
-    private String factor() throws Exception {
-        if (match("Identificador")) {
-            return previousLexema().getCadena();
-        } else if (match("Número")) {
-            return previousLexema().getCadena();
-        } else if (match("(")) {
-            String resultado = expression();
-            match(")");
-            return resultado;
-        } else {
-            throw new Exception("Factor inválido");
-        }
-    }
 
     private Lexema previousLexema() {
         return lexemas.get(index - 1);
@@ -227,17 +222,17 @@ private boolean match(String expected) {
             avanzar();
             return true;
         }
+        if (expected.equals(":=") && current.getGrupo().equals("Operador de Asignación")) {
+        avanzar();
+        return true;
+}
+
     }
 
     // Si no se encuentra lo esperado
     System.out.println("Esperado: " + expected + " pero se encontró: " + (current != null ? current.getCadena() : "null"));
     return false;
 }
-
-
-
-
-
 
     private void imprimirCuadruplos() {
         for (String cuad : cuadruplos) {
