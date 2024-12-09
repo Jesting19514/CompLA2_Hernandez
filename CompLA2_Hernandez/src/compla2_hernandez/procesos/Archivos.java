@@ -13,7 +13,9 @@ import java.util.ArrayList;
 import compla2_hernandez.ventanas.Ventana;
 import java.io.FileReader;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -251,6 +253,83 @@ private static void procesarEstructuraControl(String parte, Stack<String> operad
         ciclos.push(indiceCuadruplo);
         incompletos.push(indiceCuadruplo);
         cuadruplosGenerados.add(String.format("(JMP, , , %s)", ciclos.peek()));
+    }
+}
+public static void generarEnsambladorDesdeCuadruplos(Ventana v) {
+    // Limpiamos la salida
+    v.getTxtSalida().setText("");
+
+    // Obtenemos los cuadruplos generados
+    ArrayList<Lexema> lexemas = asociaList(v);
+    Stack<String> operandos = new Stack<>();
+    Stack<String> operadores = new Stack<>();
+    Stack<Integer> incompletos = new Stack<>();
+    Stack<Integer> ciclos = new Stack<>();
+    ArrayList<String> cuadruplosGenerados = new ArrayList<>();
+    int indiceCuadruplo = 1;
+
+    // Generar los cuadruplos usando el método existente
+    cuadruplos(v);
+
+    // Aquí se transforma el ArrayList cuadruplosGenerados en ensamblador
+    StringBuilder ensamblador = new StringBuilder();
+
+    for (String cuadruplo : cuadruplosGenerados) {
+        String[] partes = cuadruplo.replace("(", "").replace(")", "").split(",");
+        String operacion = partes[0].trim();
+        String op1 = partes.length > 1 ? partes[1].trim() : "";
+        String op2 = partes.length > 2 ? partes[2].trim() : "";
+        String resultado = partes.length > 3 ? partes[3].trim() : "";
+
+        switch (operacion) {
+            case "+":
+                ensamblador.append(String.format("MOV AX, %s\nADD AX, %s\nMOV %s, AX\n", op1, op2, resultado));
+                break;
+            case "-":
+                ensamblador.append(String.format("MOV AX, %s\nSUB AX, %s\nMOV %s, AX\n", op1, op2, resultado));
+                break;
+            case "*":
+                ensamblador.append(String.format("MOV AX, %s\nMUL %s\nMOV %s, AX\n", op1, op2, resultado));
+                break;
+            case "/":
+                ensamblador.append(String.format("MOV AX, %s\nMOV DX, 0\nDIV %s\nMOV %s, AX\n", op1, op2, resultado));
+                break;
+            case "CMP":
+                ensamblador.append(String.format("CMP %s, %s\n", op1, op2));
+                break;
+            case "JMP":
+                ensamblador.append(String.format("JMP %s\n", resultado));
+                break;
+            case "JE":
+                ensamblador.append(String.format("JE %s\n", resultado));
+                break;
+            case "RET":
+                ensamblador.append("RET\n");
+                break;
+            default:
+                ensamblador.append(String.format("; Operación no reconocida: %s\n", cuadruplo));
+        }
+    }
+
+    // Guardar el código ensamblador en un archivo .asm
+    guardarEnsambladorEnArchivo(ensamblador.toString(), v);
+}
+
+public static void guardarEnsambladorEnArchivo(String ensamblador, Ventana v) {
+    try {
+        JFileChooser chooser = new JFileChooser();
+        chooser.setDialogTitle("Guardar archivo ensamblador");
+        int userSelection = chooser.showSaveDialog(v);
+
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File archivo = chooser.getSelectedFile();
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(archivo))) {
+                writer.write(ensamblador);
+            }
+            v.getTxtSalida().setText("Archivo ensamblador guardado en: " + archivo.getAbsolutePath());
+        }
+    } catch (IOException e) {
+        v.getTxtSalida().setText("Error al guardar el archivo ensamblador.");
     }
 }
 

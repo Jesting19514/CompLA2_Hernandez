@@ -157,7 +157,7 @@ public class Ventana extends javax.swing.JFrame {
     }//GEN-LAST:event_TriplosActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        Archivos.cuadruplos(this);
+        Archivos.generarEnsambladorDesdeCuadruplos(this);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
     public JTextArea getTxtContenido() {
