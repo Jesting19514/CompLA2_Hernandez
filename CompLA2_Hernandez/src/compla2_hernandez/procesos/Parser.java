@@ -9,7 +9,7 @@ import java.util.ArrayList;
  *
  * @author team1
  */
-public class Parser {  
+public class Parser {
     private ArrayList<Lexema> lexemas;
     private int index = 0;
     private ArrayList<String> cuadruplos = new ArrayList<>();
@@ -35,158 +35,161 @@ public class Parser {
 
     public void program() throws Exception {
         System.out.println("Entra en program");
-        block();  // Llama a block
-        if (!match(".")) { // Verifica que el programa termine con un punto
+        block();
+        if (!match(TablaDeTokens.getNumero("."))) {
             throw new Exception("Se esperaba '.' al final del programa.");
         }
-        imprimirCuadruplos();  // Imprime los cuadruplos
+        imprimirCuadruplos();
     }
 
-    private void block() throws Exception {
-        // Manejo de constantes
-        if (match("const")) {
-            System.out.println("Procesando constantes...");
-            while (true) {
-                if (!match("Identificador")) {
-                    manejarError("Se esperaba un identificador después de 'const'");
-                    break;
-                }
-                if (!match("=")) {
-                    manejarError("Se esperaba '=' después del identificador");
-                    break;
-                }
-                if (!match("Número")) {
-                    manejarError("Se esperaba un número después de '='");
-                    break;
-                }
-                if (match(",")) {
-                    continue;
-                }
-                if (match(";")) {
-                    System.out.println("Constantes procesadas correctamente.");
-                    break;
-                }
-                manejarError("Se esperaba ',' o ';' después de una constante");
-                break;
+     private void statement() throws Exception {
+        if (match(TablaDeTokens.getNumero("while"))) {
+            String etiquetaInicio = "L" + tempCounter++;
+            cuadruplos.add(String.format("(label, , , %s)", etiquetaInicio));
+            String condicion = condition();
+            String etiquetaFin = "L" + tempCounter++;
+            cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFin));
+            if (!match(TablaDeTokens.getNumero("do"))) {
+                manejarError("Se esperaba 'do' después de la condición en 'while'");
+            } else {
+                statement();
             }
-        }
-
-        // Manejo de variables
-        if (match("var")) {
-            do {
-                if (!match("Identificador")) {
-                    manejarError("Se esperaba un identificador en la declaración de variables");
-                    break;
-                }
-            } while (match(","));
-            if (!match(";")) {
-                throw new Exception("Se esperaba ';' después de la declaración de variables");
-            }
-        }
-
-        // Manejo de procedimientos
-        while (match("procedure")) {
-            if (!match("Identificador")) {
-                manejarError("Se esperaba un identificador después de 'procedure'");
-                break;
-            }
-            if (!match(";")) {
-                manejarError("Se esperaba ';' después del identificador de procedimiento");
-                break;
-            }
-            block();
-            if (!match(";")) {
-                manejarError("Se esperaba ';' después del bloque del procedimiento");
-                break;
-            }
-        }
-
-        // Cuerpo principal
-        statement();
-    }
-
-    private void statement() throws Exception {
-    System.out.println("Entra en statement");
-
-    if (match("while")) {
-        String etiquetaInicio = "L" + tempCounter++;
-        cuadruplos.add(String.format("(label, , , %s)", etiquetaInicio));
-        String condicion = condition();
-        String etiquetaFin = "L" + tempCounter++;
-        cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFin));
-        if (!match("do")) {
-            manejarError("Se esperaba 'do' después de la condición en 'while'");
-        } else {
-            statement();
-        }
-        cuadruplos.add(String.format("(jmp, , , %s)", etiquetaInicio));
-        cuadruplos.add(String.format("(label, , , %s)", etiquetaFin));
-    } else if (match("Identificador")) {
-        String identificador = previousLexema().getCadena();
-        if (!match(":=")) {
-            manejarError("Se esperaba ':=' después del identificador");
-            return;
-        }
-        String resultadoDeExpresion = expression();
-        cuadruplos.add(String.format("(:=, %s, , %s)", resultadoDeExpresion, identificador));
-    } else if (match("call")) {
-        if (!match("Identificador")) {
-            manejarError("Se esperaba un identificador después de 'call'");
-        }
-    } else if (match("read")) {
-        if (!match("Identificador")) {
-            manejarError("Se esperaba un identificador después de 'read'");
-        } else {
+            cuadruplos.add(String.format("(jmp, , , %s)", etiquetaInicio));
+            cuadruplos.add(String.format("(label, , , %s)", etiquetaFin));
+        } else if (match(TablaDeTokens.getNumero("Identificador"))) {
             String identificador = previousLexema().getCadena();
-            cuadruplos.add(String.format("(read, , , %s)", identificador));
+            if (!match(TablaDeTokens.getNumero(":="))) {
+                manejarError("Se esperaba ':=' después del identificador");
+                return;
+            }
+            String resultadoDeExpresion = expression();
+            cuadruplos.add(String.format("(:=, %s, , %s)", resultadoDeExpresion, identificador));
+        } else if (match(TablaDeTokens.getNumero("call"))) {
+            if (!match(TablaDeTokens.getNumero("Identificador"))) {
+                manejarError("Se esperaba un identificador después de 'call'");
+            }
+        } else if (match(TablaDeTokens.getNumero("read"))) {
+            if (!match(TablaDeTokens.getNumero("Identificador"))) {
+                manejarError("Se esperaba un identificador después de 'read'");
+            } else {
+                String identificador = previousLexema().getCadena();
+                cuadruplos.add(String.format("(read, , , %s)", identificador));
+            }
+        } else if (match(TablaDeTokens.getNumero("write"))) {
+            String resultadoDeExpresion = expression();
+            cuadruplos.add(String.format("(write, %s, , )", resultadoDeExpresion));
+        } else if (match(TablaDeTokens.getNumero("begin"))) {
+            do {
+                statement();
+            } while (match(TablaDeTokens.getNumero(";")));
+            if (!match(TablaDeTokens.getNumero("end"))) {
+                manejarError("Falta 'end' al final del bloque 'begin'");
+            }
+        } else if (match(TablaDeTokens.getNumero("if"))) {
+            String condicion = condition();
+            if (!match(TablaDeTokens.getNumero("then"))) {
+                manejarError("Se esperaba 'then' después de la condición en 'if'");
+                return;
+            }
+            String etiquetaFalsa = "L" + nuevoTemporal();
+            cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFalsa));
+            statement();
+            cuadruplos.add(String.format("(label, , , %s)", etiquetaFalsa));
+        } else {
+            manejarError("Statement no reconocido");
         }
-    } else if (match("write")) {
-        String resultadoDeExpresion = expression();
-        cuadruplos.add(String.format("(write, %s, , )", resultadoDeExpresion));
-    } else if (match("begin")) {
-        System.out.println("Procesando bloque 'begin'");
-        do {
-            statement(); // Procesa cada statement dentro del bloque
-            if (currentLexema() != null && match(";")) {
+    }
+     
+     
+     
+   private void block() throws Exception {
+    // Manejo de constantes
+    if (match(TablaDeTokens.getNumero("const"))) {
+        System.out.println("Procesando constantes...");
+        while (true) {
+            if (!match(TablaDeTokens.getNumero("Identificador"))) {
+                manejarError("Se esperaba un identificador después de 'const'");
+                break;
+            }
+            if (!match(TablaDeTokens.getNumero("="))) {
+                manejarError("Se esperaba '=' después del identificador");
+                break;
+            }
+            // Aseguramos que se lee un número después del "="
+            if (!match(TablaDeTokens.getNumero("Número"))) {
+                manejarError("Se esperaba un número después de '='");
+                break;
+            }
+            // Si hay una coma, se continúa procesando más constantes
+            if (match(TablaDeTokens.getNumero(","))) {
                 continue;
             }
-        } while (currentLexema() != null && !match("end"));
-        if (!match("end")) {
-            manejarError("Falta 'end' al final del bloque 'begin'");
+            // Si hay un punto y coma, finalizamos las constantes
+            if (match(TablaDeTokens.getNumero(";"))) {
+                System.out.println("Constantes procesadas correctamente.");
+                break;
+            }
+            manejarError("Se esperaba ',' o ';' después de una constante");
+            break;
         }
-    } else if (match("if")) {
-        String condicion = condition(); // Evalúa la condición
-        if (!match("then")) {
-            manejarError("Se esperaba 'then' después de la condición en 'if'");
-            return;
-        }
-        String etiquetaFalsa = "L" + nuevoTemporal();
-        cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFalsa));
-        statement(); // Procesa el bloque dentro del `if`
-        cuadruplos.add(String.format("(label, , , %s)", etiquetaFalsa)); // Etiqueta falsa
-    } else {
-        manejarError("Statement no reconocido");
     }
-    debug("statement");
+
+    // Manejo de variables
+    if (match(TablaDeTokens.getNumero("var"))) {
+        do {
+            if (!match(TablaDeTokens.getNumero("Identificador"))) {
+                manejarError("Se esperaba un identificador en la declaración de variables");
+                break;
+            }
+        } while (match(TablaDeTokens.getNumero(",")));
+        if (!match(TablaDeTokens.getNumero(";"))) {
+            throw new Exception("Se esperaba ';' después de la declaración de variables");
+        }
+    }
+
+    // Manejo de procedimientos
+    while (match(TablaDeTokens.getNumero("procedure"))) {
+        if (!match(TablaDeTokens.getNumero("Identificador"))) {
+            manejarError("Se esperaba un identificador después de 'procedure'");
+            break;
+        }
+        if (!match(TablaDeTokens.getNumero(";"))) {
+            manejarError("Se esperaba ';' después del identificador de procedimiento");
+            break;
+        }
+        block();
+        if (!match(TablaDeTokens.getNumero(";"))) {
+            manejarError("Se esperaba ';' después del bloque del procedimiento");
+            break;
+        }
+    }
+
+    // Cuerpo principal
+    statement();
 }
 
-
-    private void manejarError(String mensaje) {
-        System.out.println("Error: " + mensaje + " en índice " + index);
-        avanzar(); // Avanza para evitar ciclos infinitos
+private boolean match(int expectedToken) {
+    Lexema current = currentLexema();
+    if (current != null && current.getToken() == expectedToken) {
+        avanzar();
+        return true;
     }
+    return false;
+}
 
-    private void debug(String mensaje) {
-        System.out.println("DEBUG: " + mensaje + " en índice " + index + " con token " + (currentLexema() != null ? currentLexema().getCadena() : "null"));
+private void manejarError(String mensaje) {
+    Lexema actual = currentLexema();
+    System.out.println("Error: " + mensaje + " en token: " +
+            (actual != null ? actual.getCadena() : "null") +
+            " (índice: " + index + ")");
+    avanzar();  // Avanzar para evitar ciclos infinitos
+}
+
+private void imprimirCuadruplos() {
+    for (String cuad : cuadruplos) {
+        System.out.println(cuad);
     }
-
-    private void imprimirCuadruplos() {
-        for (String cuad : cuadruplos) {
-            System.out.println(cuad);
-        }
-    }
-
-
+}
 
    private String condition() throws Exception {
     String ladoIzquierdo = expression();
