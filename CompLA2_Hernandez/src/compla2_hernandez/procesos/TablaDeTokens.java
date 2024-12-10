@@ -85,7 +85,7 @@ public class TablaDeTokens {
             case "write": 
                 return 113;
             default:
-                if (dato.matches("[1-9]\\d*")) {   //digitos
+                if (dato.matches("[1-9]\\d*")) {   //numero
                     return 2;
                 } else if (dato.matches("[a-zA-Z][a-zA-Z0-9_]*")) { //identificadores
                     return 1;
