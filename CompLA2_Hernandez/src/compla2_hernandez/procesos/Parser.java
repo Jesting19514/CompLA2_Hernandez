@@ -45,17 +45,8 @@ public class Parser {
     
 /// Manejo de constantes
 if (match("const")) {
-    boolean first = true;  // Para manejar el primer elemento sin esperar coma
     System.out.println("Procesando constantes...");
-    
-    do {
-        // Si no es la primera constante, se espera una coma
-        if (!first) {
-            if (!match(",")) {
-                throw new Exception("Se esperaba ',' después de una constante");
-            }
-        }
-        
+    while (true) {
         // Verificamos que el primer token sea un "Identificador"
         if (match("Identificador")) {
             System.out.println("Identificador encontrado: " + previousLexema().getCadena());
@@ -75,15 +66,23 @@ if (match("const")) {
         }
         System.out.println("Número encontrado: " + previousLexema().getCadena());
         
-        first = false;  // Después de la primera constante, activamos la necesidad de coma
-    } while (match(","));  // Si encontramos una coma, seguimos esperando más constantes
-    
-    // Verificamos que la declaración de constantes termine con ";"
-    if (!match(";")) {
-        throw new Exception("Falta ';' después de declaración de constantes");
+        // Si encontramos una coma, continuamos procesando la siguiente constante
+        if (match(",")) {
+            System.out.println("Se encontró ',' continuando con la siguiente constante...");
+            continue;
+        }
+        
+        // Si no hay una coma, esperamos un punto y coma ";" para terminar la declaración
+        if (match(";")) {
+            System.out.println("Constantes procesadas correctamente.");
+            break;
+        }
+        
+        // Si no encontramos coma ni punto y coma, hay un error
+        throw new Exception("Se esperaba ',' o ';' después de una constante");
     }
-    System.out.println("Constantes procesadas correctamente");
 }
+
 
 
 
@@ -122,16 +121,19 @@ statement();
   private void statement() throws Exception {
     System.out.println("Entra en statement");
 
-    if (match("while")) {
-        String etiquetaInicio = "L" + tempCounter++;
-        cuadruplos.add(String.format("(label, , , %s)", etiquetaInicio));
-        String condicion = condition();
-        String etiquetaFin = "L" + tempCounter++;
-        cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFin));
-        match("do");
-        statement();
-        cuadruplos.add(String.format("(jmp, , , %s)", etiquetaInicio));
-        cuadruplos.add(String.format("(label, , , %s)", etiquetaFin));
+   if (match("while")) {
+    String etiquetaInicio = "L" + tempCounter++;
+    cuadruplos.add(String.format("(label, , , %s)", etiquetaInicio));
+    String condicion = condition();
+    String etiquetaFin = "L" + tempCounter++;
+    cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFin));
+    if (!match("do")) {
+        manejarError("Se esperaba 'do' después de condición en while.");
+    } else {
+        statement(); // Procesa el cuerpo del while
+    }
+    cuadruplos.add(String.format("(jmp, , , %s)", etiquetaInicio));
+    cuadruplos.add(String.format("(label, , , %s)", etiquetaFin));
     } else {
     if (match("Identificador")) {
         String Identificador = previousLexema().getCadena();
@@ -277,7 +279,12 @@ private boolean match(String expected) {
                 return true;
             }
             break;
-    
+        case ";":
+            if (current.getGrupo().equals("Agrupador") && current.getCadena().equals(";")) {
+                avanzar();
+                return true;
+            }
+            break;
         default:
             if (expected.equals(current.getCadena()) && current.getGrupo().equals("Palabra Reservada")) {
                 avanzar();
@@ -288,6 +295,7 @@ private boolean match(String expected) {
     System.out.println("Esperado: " + expected + " pero se encontró: " + (current != null ? current.getCadena() : "null"));
     return false;
 }
+
 
 
 
@@ -305,6 +313,11 @@ private boolean match(String expected) {
     
     private void debug(String mensaje) {
     System.out.println("DEBUG: " + mensaje + " en índice " + index + " con token " + (currentLexema() != null ? currentLexema().getCadena() : "null"));
+}
+
+    private void manejarError(String mensaje) {
+    System.out.println("Error: " + mensaje);
+    avanzar(); // Avanza al siguiente token para evitar ciclos infinitos
 }
 
 }
