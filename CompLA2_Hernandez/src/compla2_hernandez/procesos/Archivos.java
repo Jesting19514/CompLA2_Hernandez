@@ -51,8 +51,8 @@ public class Archivos {
     public static ArrayList<Lexema> getList(Ventana v) {
         v.getTxtSalida().setText("");
         String contenido = v.getTxtContenido().getText().trim();
-        String exp =  "(\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read)\\b)|" +
-             "([a-zA-Z]\\w*)|([0-9]+)|(:=)|(>=|<=|==|!=|>|<|=)|([+\\-*/^])|([(),;\\.])";;
+        String exp = "(\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read)\\b)|" + 
+             "([a-zA-Z]\\w*)|([0-9]+)|(:=)|(>=|<=|==|!=|>|<|=)|([+\\-*/^])|([(),;\\.])";
         Pattern patron = Pattern.compile(exp);
         Matcher matcher = patron.matcher(contenido);
 //if while for
@@ -60,42 +60,28 @@ public class Archivos {
             String parte = matcher.group();
             int tokenNumber = TablaDeTokens.getNumero(parte);
             
-            if (parte.matches("\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read|write)\\b")) {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Palabra Reservada");
-                Lexema.addLexema(lexema);
-                continue;
-            }
-
-            if (parte.matches(">=|<=|==|!=|>|<|="))
-                                                     {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador Relacional");
-                Lexema.addLexema(lexema);
-                continue;
-            }
-            if (parte.matches("[+\\-\\*\\/\\^]+")) {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador Aritmético");
-                Lexema.addLexema(lexema);
-                continue;
-            }
-            if (parte.matches("[(\\)\\;\\,\\.]+")) {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Agrupador");
-                Lexema.addLexema(lexema);
-                continue;
-            }
-            if (parte.matches(":=")) {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador de Asignación");
-                Lexema.addLexema(lexema);
-                continue;
-            }
-
-            if (parte.matches("\\d+")) {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Número");
-                Lexema.addLexema(lexema);
-            } else if (parte.matches("[a-zA-Z]\\w*")) {
-                Lexema lexema = new Lexema(tokenNumber, parte, 0, "Identificador");
-                Lexema.addLexema(lexema);
-            }
-            
+            if (parte.matches("\\b(begin|end|const|var|procedure|call|if|then|else|while|do|odd|read)\\b")) {
+    Lexema lexema = new Lexema(tokenNumber, parte, 0, "Palabra Reservada");
+    Lexema.addLexema(lexema);
+} else if (parte.matches(">=|<=|==|!=|>|<|=")) {
+    Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador Relacional");
+    Lexema.addLexema(lexema);
+} else if (parte.matches("[+\\-\\*\\/\\^]+")) {
+    Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador Aritmético");
+    Lexema.addLexema(lexema);
+} else if (parte.matches("[(\\)\\;\\,\\.]+")) {
+    Lexema lexema = new Lexema(tokenNumber, parte, 0, "Agrupador");
+    Lexema.addLexema(lexema);
+} else if (parte.matches(":=")) {
+    Lexema lexema = new Lexema(tokenNumber, parte, 0, "Operador de Asignación");
+    Lexema.addLexema(lexema);
+} else if (parte.matches("\\d+")) {
+    Lexema lexema = new Lexema(tokenNumber, parte, 0, "Número");
+    Lexema.addLexema(lexema);
+} else if (parte.matches("[a-zA-Z]\\w*")) {
+    Lexema lexema = new Lexema(tokenNumber, parte, 0, "Identificador");
+    Lexema.addLexema(lexema);
+}    
         }
 
         return Lexema.getArrLexema();

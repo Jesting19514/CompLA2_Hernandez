@@ -49,8 +49,8 @@ if (match("const")) {
         match("Identificador");
         match("=");
         match("Número");
-    } while (match(",")); // Acepta múltiples declaraciones separadas por coma
-    if (!match(";")) {    // Pero debe terminar con un punto y coma
+    } while (match(","));
+    if (!match(";")) {
         throw new Exception("Falta ';' después de declaración de constantes");
     }
 }
@@ -86,6 +86,17 @@ statement();
   private void statement() throws Exception {
     System.out.println("Entra en statement");
 
+    if (match("while")) {
+        String etiquetaInicio = "L" + tempCounter++;
+        cuadruplos.add(String.format("(label, , , %s)", etiquetaInicio));
+        String condicion = condition();
+        String etiquetaFin = "L" + tempCounter++;
+        cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFin));
+        match("do");
+        statement();
+        cuadruplos.add(String.format("(jmp, , , %s)", etiquetaInicio));
+        cuadruplos.add(String.format("(label, , , %s)", etiquetaFin));
+    } else {
     if (match("Identificador")) {
         String Identificador = previousLexema().getCadena();
         if (!match(":=")) { // Verifica si se encuentra el operador de asignación correcto
@@ -104,47 +115,46 @@ statement();
     } else if (match("write")) {
         String resultadoDeExpresion = expression();
         cuadruplos.add(String.format("(write, %s, , )", resultadoDeExpresion));
-    } else if (match("begin")) { // Manejo de bloques 'begin ... end'
+    } else if (match("begin")) {
     do {
-        statement(); // Analiza cada statement dentro del bloque
-    } while (match(";")); // Acepta múltiples statements separados por ';'
-    if (!match("end")) { // Verifica que el bloque cierre con 'end'
+        statement();  // Analiza cada statement dentro del bloque
+        if (currentLexema() != null && match(";")) {
+            continue;
+        }
+    } while (currentLexema() != null && !match("end"));
+    if (!match("end")) {
         throw new Exception("Falta 'end' al final del bloque 'begin'");
     }
+
     } else if (match("if")) {
-    String condicion = condition(); // Evalúa la condición
+    String condicion = condition();  // Evalúa la condición
     match("then");
     String etiquetaFalsa = "L" + nuevoTemporal();
     cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFalsa));
-    statement(); // Procesa el bloque dentro del `if`
-    cuadruplos.add(String.format("(label, , , %s)", etiquetaFalsa)); // Etiqueta falsa
-    } else if (match("while")) {
-        int inicioCondicion = cuadruplos.size();
-        String condicion = condition();
-        match("do");
-        cuadruplos.add(String.format("(jf, %s, , L%d)", condicion, tempCounter));
-        int saltoCondicion = cuadruplos.size() - 1;
-        statement();
-        cuadruplos.add(String.format("(jmp, , , L%d)", inicioCondicion));
-        cuadruplos.set(saltoCondicion, cuadruplos.get(saltoCondicion).replace("L" + tempCounter, "L" + (cuadruplos.size())));
-    } else {
-        throw new Exception("Estructura no reconocida en 'statement'");
+    statement();  // Procesa el bloque dentro del `if`
+    cuadruplos.add(String.format("(label, , , %s)", etiquetaFalsa));  // Etiqueta falsa
+} 
     }
+    debug("statement");
+    
 }
 
 
 
-    private String condition() throws Exception {
+   private String condition() throws Exception {
     String ladoIzquierdo = expression();
     if (match("=") || match("<>") || match("<") || match("<=") || match(">") || match(">=")) {
         String operador = previousLexema().getCadena();
         String ladoDerecho = expression();
-        cuadruplos.add(String.format("(%s, %s, %s, temp%d)", operador, ladoIzquierdo, ladoDerecho, tempCounter));
-        return "temp" + tempCounter++;
+        String temporal = nuevoTemporal();
+        cuadruplos.add(String.format("(%s, %s, %s, %s)", operador, ladoIzquierdo, ladoDerecho, temporal));
+        return temporal;
     } else {
         throw new Exception("Condición inválida: operador relacional esperado");
     }
+    
 }
+
 
 
 private String expression() throws Exception {
@@ -171,13 +181,13 @@ private String term() throws Exception {
 }
 
 
-  private String factor() throws Exception {
+ private String factor() throws Exception {
     if (match("Número")) {
-        return previousLexema().getCadena(); // Devuelve el número
+        return previousLexema().getCadena();
     } else if (match("Identificador")) {
-        return previousLexema().getCadena(); // Devuelve el identificador
+        return previousLexema().getCadena();
     } else if (match("(")) {
-        String resultado = expression(); // Procesa una subexpresión entre paréntesis
+        String resultado = expression();
         if (!match(")")) {
             throw new Exception("Falta ')' para cerrar la expresión");
         }
@@ -189,50 +199,55 @@ private String term() throws Exception {
 
 
 
+
     private Lexema previousLexema() {
         return lexemas.get(index - 1);
     }
 
 private boolean match(String expected) {
     Lexema current = currentLexema();
-
-    if (current != null) {
-        // Manejo para operadores relacionales
-        if (expected.equals("=") && current.getGrupo().equals("Operador Relacional")) {
-            avanzar();
-            return true;
-        }
-        // Manejo para identificadores
-        if (expected.equals("Identificador") && current.getGrupo().equals("Identificador")) {
-            avanzar();
-            return true;
-        }
-        // Manejo para números
-        if (expected.equals("Número") && current.getGrupo().equals("Número")) {
-            avanzar();
-            return true;
-        }
-        // Manejo para palabras reservadas
-        if (expected.equals(current.getCadena()) && current.getGrupo().equals("Palabra Reservada")) {
-            avanzar();
-            return true;
-        }
-        // Manejo para agrupadores (por ejemplo, ',' o ';')
-        if (expected.equals(current.getCadena()) && current.getGrupo().equals("Agrupador")) {
-            avanzar();
-            return true;
-        }
-        if (expected.equals(":=") && current.getGrupo().equals("Operador de Asignación")) {
-        avanzar();
-        return true;
-}
-
+    if (current == null) {
+        return false;
     }
 
-    // Si no se encuentra lo esperado
+    switch (expected) {
+        case "=":
+            if (current.getGrupo().equals("Operador Relacional")) {
+                avanzar();
+                return true;
+            }
+            break;
+        case "Identificador":
+            if (current.getGrupo().equals("Identificador")) {
+                avanzar();
+                return true;
+            }
+            break;
+        case "Número":
+            if (current.getGrupo().equals("Número")) {
+                avanzar();
+                return true;
+            }
+            break;
+        case ":=":
+            if (current.getGrupo().equals("Operador de Asignación")) {
+                avanzar();
+                return true;
+            }
+            break;
+        default:
+            if (expected.equals(current.getCadena()) && current.getGrupo().equals("Palabra Reservada")) {
+                avanzar();
+                return true;
+            }
+            break;
+    }
     System.out.println("Esperado: " + expected + " pero se encontró: " + (current != null ? current.getCadena() : "null"));
     return false;
 }
+
+
+
 
     private void imprimirCuadruplos() {
         for (String cuad : cuadruplos) {
@@ -243,4 +258,11 @@ private boolean match(String expected) {
     public ArrayList<String> getCuadruplos() {
         return cuadruplos;
     }
+    
+    
+    private void debug(String mensaje) {
+    System.out.println("DEBUG: " + mensaje + " en índice " + index + " con token " + (currentLexema() != null ? currentLexema().getCadena() : "null"));
 }
+
+}
+
