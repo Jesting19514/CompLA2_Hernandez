@@ -42,18 +42,54 @@ public class Parser {
 
 
     private void block() throws Exception {
-    // Manejo de constantes
     
+/// Manejo de constantes
 if (match("const")) {
+    boolean first = true;  // Para manejar el primer elemento sin esperar coma
+    System.out.println("Procesando constantes...");
+    
     do {
-        match("Identificador");
-        match("=");
-        match("Número");
-    } while (match(","));
+        // Si no es la primera constante, se espera una coma
+        if (!first) {
+            if (!match(",")) {
+                throw new Exception("Se esperaba ',' después de una constante");
+            }
+        }
+        
+        // Verificamos que el primer token sea un "Identificador"
+        if (match("Identificador")) {
+            System.out.println("Identificador encontrado: " + previousLexema().getCadena());
+        } else {
+            throw new Exception("Se esperaba un identificador después de 'const'");
+        }
+        
+        // Verificamos que el siguiente token sea "="
+        if (!match("=")) {
+            throw new Exception("Se esperaba '=' después de identificador");
+        }
+        System.out.println("Operador '=' encontrado");
+        
+        // Verificamos que el siguiente token sea un "Número"
+        if (!match("Número")) {
+            throw new Exception("Se esperaba un número después de '='");
+        }
+        System.out.println("Número encontrado: " + previousLexema().getCadena());
+        
+        first = false;  // Después de la primera constante, activamos la necesidad de coma
+    } while (match(","));  // Si encontramos una coma, seguimos esperando más constantes
+    
+    // Verificamos que la declaración de constantes termine con ";"
     if (!match(";")) {
         throw new Exception("Falta ';' después de declaración de constantes");
     }
+    System.out.println("Constantes procesadas correctamente");
 }
+
+
+
+
+
+
 
 if (match("var")) {
     do {
@@ -235,6 +271,13 @@ private boolean match(String expected) {
                 return true;
             }
             break;
+        case ",":
+            if (current.getGrupo().equals("Agrupador") && current.getCadena().equals(",")) {
+                avanzar();
+                return true;
+            }
+            break;
+    
         default:
             if (expected.equals(current.getCadena()) && current.getGrupo().equals("Palabra Reservada")) {
                 avanzar();
