@@ -33,149 +33,158 @@ public class Parser {
         return "t" + (tempCounter++);
     }
 
-  public void program() throws Exception {
-    System.out.println("Entra en program");
-    block();  // Llama a block
-    match(".");  // Asegúrate de que el programa termine con un punto
-    imprimirCuadruplos();  // Imprime los cuadruplos
-}
-
+    public void program() throws Exception {
+        System.out.println("Entra en program");
+        block();  // Llama a block
+        if (!match(".")) { // Verifica que el programa termine con un punto
+            throw new Exception("Se esperaba '.' al final del programa.");
+        }
+        imprimirCuadruplos();  // Imprime los cuadruplos
+    }
 
     private void block() throws Exception {
-    
-/// Manejo de constantes
-if (match("const")) {
-    System.out.println("Procesando constantes...");
-    while (true) {
-        // Verificamos que el primer token sea un "Identificador"
-        if (match("Identificador")) {
-            System.out.println("Identificador encontrado: " + previousLexema().getCadena());
-        } else {
-            throw new Exception("Se esperaba un identificador después de 'const'");
+        // Manejo de constantes
+        if (match("const")) {
+            System.out.println("Procesando constantes...");
+            while (true) {
+                if (!match("Identificador")) {
+                    manejarError("Se esperaba un identificador después de 'const'");
+                    break;
+                }
+                if (!match("=")) {
+                    manejarError("Se esperaba '=' después del identificador");
+                    break;
+                }
+                if (!match("Número")) {
+                    manejarError("Se esperaba un número después de '='");
+                    break;
+                }
+                if (match(",")) {
+                    continue;
+                }
+                if (match(";")) {
+                    System.out.println("Constantes procesadas correctamente.");
+                    break;
+                }
+                manejarError("Se esperaba ',' o ';' después de una constante");
+                break;
+            }
         }
-        
-        // Verificamos que el siguiente token sea "="
-        if (!match("=")) {
-            throw new Exception("Se esperaba '=' después de identificador");
+
+        // Manejo de variables
+        if (match("var")) {
+            do {
+                if (!match("Identificador")) {
+                    manejarError("Se esperaba un identificador en la declaración de variables");
+                    break;
+                }
+            } while (match(","));
+            if (!match(";")) {
+                throw new Exception("Se esperaba ';' después de la declaración de variables");
+            }
         }
-        System.out.println("Operador '=' encontrado");
-        
-        // Verificamos que el siguiente token sea un "Número"
-        if (!match("Número")) {
-            throw new Exception("Se esperaba un número después de '='");
+
+        // Manejo de procedimientos
+        while (match("procedure")) {
+            if (!match("Identificador")) {
+                manejarError("Se esperaba un identificador después de 'procedure'");
+                break;
+            }
+            if (!match(";")) {
+                manejarError("Se esperaba ';' después del identificador de procedimiento");
+                break;
+            }
+            block();
+            if (!match(";")) {
+                manejarError("Se esperaba ';' después del bloque del procedimiento");
+                break;
+            }
         }
-        System.out.println("Número encontrado: " + previousLexema().getCadena());
-        
-        // Si encontramos una coma, continuamos procesando la siguiente constante
-        if (match(",")) {
-            System.out.println("Se encontró ',' continuando con la siguiente constante...");
-            continue;
-        }
-        
-        // Si no hay una coma, esperamos un punto y coma ";" para terminar la declaración
-        if (match(";")) {
-            System.out.println("Constantes procesadas correctamente.");
-            break;
-        }
-        
-        // Si no encontramos coma ni punto y coma, hay un error
-        throw new Exception("Se esperaba ',' o ';' después de una constante");
+
+        // Cuerpo principal
+        statement();
     }
-}
 
-
-
-
-
-
-
-
-if (match("var")) {
-    do {
-        match("Identificador");
-    } while (match(",")); // Acepta múltiples variables separadas por coma
-    if (!match(";")) {    // Pero debe terminar con un punto y coma
-        throw new Exception("Falta ';' después de declaración de variables");
-    }
-}
-
-
-    // Manejo de procedimientos
-    // En block()
-while (match("procedure")) {
-    match("Identificador");
-    if (!match(";")) {
-        throw new Exception("Falta ';' después de nombre de procedimiento");
-    }
-    block(); // Procedimiento tiene su propio bloque
-    if (!match(";")) {
-        throw new Exception("Falta ';' después de bloque de procedimiento");
-    }
-}
-
-// Luego continúa con el cuerpo principal
-statement();
-}
-
-
-  private void statement() throws Exception {
+    private void statement() throws Exception {
     System.out.println("Entra en statement");
 
-   if (match("while")) {
-    String etiquetaInicio = "L" + tempCounter++;
-    cuadruplos.add(String.format("(label, , , %s)", etiquetaInicio));
-    String condicion = condition();
-    String etiquetaFin = "L" + tempCounter++;
-    cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFin));
-    if (!match("do")) {
-        manejarError("Se esperaba 'do' después de condición en while.");
-    } else {
-        statement(); // Procesa el cuerpo del while
-    }
-    cuadruplos.add(String.format("(jmp, , , %s)", etiquetaInicio));
-    cuadruplos.add(String.format("(label, , , %s)", etiquetaFin));
-    } else {
-    if (match("Identificador")) {
-        String Identificador = previousLexema().getCadena();
-        if (!match(":=")) { // Verifica si se encuentra el operador de asignación correcto
-            throw new Exception("Esperado ':=' pero se encontró: " + currentLexema().getCadena());
+    if (match("while")) {
+        String etiquetaInicio = "L" + tempCounter++;
+        cuadruplos.add(String.format("(label, , , %s)", etiquetaInicio));
+        String condicion = condition();
+        String etiquetaFin = "L" + tempCounter++;
+        cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFin));
+        if (!match("do")) {
+            manejarError("Se esperaba 'do' después de la condición en 'while'");
+        } else {
+            statement();
+        }
+        cuadruplos.add(String.format("(jmp, , , %s)", etiquetaInicio));
+        cuadruplos.add(String.format("(label, , , %s)", etiquetaFin));
+    } else if (match("Identificador")) {
+        String identificador = previousLexema().getCadena();
+        if (!match(":=")) {
+            manejarError("Se esperaba ':=' después del identificador");
+            return;
         }
         String resultadoDeExpresion = expression();
-        cuadruplos.add(String.format("(:=, %s, , %s)", resultadoDeExpresion, Identificador));
+        cuadruplos.add(String.format("(:=, %s, , %s)", resultadoDeExpresion, identificador));
     } else if (match("call")) {
-        match("Identificador");
+        if (!match("Identificador")) {
+            manejarError("Se esperaba un identificador después de 'call'");
+        }
     } else if (match("read")) {
-    if (!match("Identificador")) { // Verifica que `read` sea seguido de un identificador
-        throw new Exception("Se esperaba un identificador después de 'read'");
-    }
-    String identificador = previousLexema().getCadena();
-    cuadruplos.add(String.format("(read, , , %s)", identificador));
+        if (!match("Identificador")) {
+            manejarError("Se esperaba un identificador después de 'read'");
+        } else {
+            String identificador = previousLexema().getCadena();
+            cuadruplos.add(String.format("(read, , , %s)", identificador));
+        }
     } else if (match("write")) {
         String resultadoDeExpresion = expression();
         cuadruplos.add(String.format("(write, %s, , )", resultadoDeExpresion));
     } else if (match("begin")) {
-    do {
-        statement();  // Analiza cada statement dentro del bloque
-        if (currentLexema() != null && match(";")) {
-            continue;
+        System.out.println("Procesando bloque 'begin'");
+        do {
+            statement(); // Procesa cada statement dentro del bloque
+            if (currentLexema() != null && match(";")) {
+                continue;
+            }
+        } while (currentLexema() != null && !match("end"));
+        if (!match("end")) {
+            manejarError("Falta 'end' al final del bloque 'begin'");
         }
-    } while (currentLexema() != null && !match("end"));
-    if (!match("end")) {
-        throw new Exception("Falta 'end' al final del bloque 'begin'");
-    }
-
     } else if (match("if")) {
-    String condicion = condition();  // Evalúa la condición
-    match("then");
-    String etiquetaFalsa = "L" + nuevoTemporal();
-    cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFalsa));
-    statement();  // Procesa el bloque dentro del `if`
-    cuadruplos.add(String.format("(label, , , %s)", etiquetaFalsa));  // Etiqueta falsa
-} 
+        String condicion = condition(); // Evalúa la condición
+        if (!match("then")) {
+            manejarError("Se esperaba 'then' después de la condición en 'if'");
+            return;
+        }
+        String etiquetaFalsa = "L" + nuevoTemporal();
+        cuadruplos.add(String.format("(jf, %s, , %s)", condicion, etiquetaFalsa));
+        statement(); // Procesa el bloque dentro del `if`
+        cuadruplos.add(String.format("(label, , , %s)", etiquetaFalsa)); // Etiqueta falsa
+    } else {
+        manejarError("Statement no reconocido");
     }
     debug("statement");
-    
 }
+
+
+    private void manejarError(String mensaje) {
+        System.out.println("Error: " + mensaje + " en índice " + index);
+        avanzar(); // Avanza para evitar ciclos infinitos
+    }
+
+    private void debug(String mensaje) {
+        System.out.println("DEBUG: " + mensaje + " en índice " + index + " con token " + (currentLexema() != null ? currentLexema().getCadena() : "null"));
+    }
+
+    private void imprimirCuadruplos() {
+        for (String cuad : cuadruplos) {
+            System.out.println(cuad);
+        }
+    }
 
 
 
@@ -297,28 +306,9 @@ private boolean match(String expected) {
 }
 
 
-
-
-
-    private void imprimirCuadruplos() {
-        for (String cuad : cuadruplos) {
-            System.out.println(cuad);
-        }
-    }
-
     public ArrayList<String> getCuadruplos() {
         return cuadruplos;
     }
-    
-    
-    private void debug(String mensaje) {
-    System.out.println("DEBUG: " + mensaje + " en índice " + index + " con token " + (currentLexema() != null ? currentLexema().getCadena() : "null"));
-}
-
-    private void manejarError(String mensaje) {
-    System.out.println("Error: " + mensaje);
-    avanzar(); // Avanza al siguiente token para evitar ciclos infinitos
-}
 
 }
 
